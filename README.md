@@ -1,12 +1,12 @@
-# 我去不早说
+# 我去不早说！
 
-Claude Code 会话监控器，常驻 Windows 系统托盘，实时监控 `~/.claude/history.jsonl` 的变动。当有新交互时在屏幕右下角弹出通知，智能分类用户行为。
+**非常实用的Claude Code小助手**
 
 ## 功能
 
-- 实时监控 Claude Code 会话，新交互弹出桌面通知
-- 智能识别 11 种交互类型（提问、请求、bug、规划等）
-- 右下角系统托盘图标，不占任务栏
+- 实时预测 Claude Code 会话，弹出桌面通知
+- 智能预测交互类型
+- 右下角系统托盘图标
 - 支持暂停/恢复监控
 - 设置界面：自定义用户名、一键开关机启动
 
@@ -20,14 +20,59 @@ Claude Code 会话监控器，常驻 Windows 系统托盘，实时监控 `~/.cla
 
 ## 快速开始
 
+### 1. 下载项目
+
+**Git Clone**
+
 ```bash
-git clone https://github.com/your-username/WhyNotEarlier.git
+git clone https://github.com/2539510474/WhyNotEarlier.git
 cd WhyNotEarlier
+```
+
+
+### 2. 安装 Python 环境
+
+如果还没装 Python，去 [python.org](https://www.python.org/downloads/) 下载 Python 3.10 及以上版本。
+
+**关键步骤**：安装时第一页勾选底部的 **Add Python to PATH**，然后点击 **Customize installation**，确保 **tcl/tk and IDLE** 处于勾选状态。否则 tkinter 不会安装，程序无法运行。
+
+如果已经装过 Python 但缺 tkinter，重新运行安装器 → Modify → 勾选 `tcl/tk and IDLE`。
+
+验证 tkinter 是否可用：
+
+```bash
+python -c "import tkinter; print('ok')"
+```
+
+输出 `ok` 即正常。
+
+### 3. 安装依赖
+
+打开终端（PowerShell 或 CMD），进入项目目录：
+
+```bash
 pip install -r requirements.txt
+```
+
+国内用户如果下载慢，可以换清华源：
+
+```bash
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+### 4. 启动
+
+```bash
 pythonw woqu.py
 ```
 
 或者直接双击 `start.bat`。
+
+启动后右下角系统托盘出现橙色 C 图标即表示运行中。右键图标可以暂停/恢复监控、打开设置。
+
+### 5. 开机自启（可选）
+
+右键托盘图标 → 设置 → 勾选"开机启动"→ 保存。程序会自动在 Windows 启动目录创建启动脚本，下次开机自动运行。
 
 ## 使用
 
@@ -48,24 +93,6 @@ pythonw woqu.py
 
 ## 交互分类
 
-根据用户输入文本自动识别 11 种交互类型：
-
-| 类型 | 示例触发词 |
-|------|-----------|
-| 询问了一个问题 | 怎么、为什么、how、why、? |
-| 发了一个请求 | 帮我、请、create、fix |
-| 发现了一个 bug | 报错、崩溃、exception、不行 |
-| 彻底怒了 | 妈的、垃圾、fuck、shit |
-| 想开一个新项目 | 新项目、init、scaffold |
-| 想加一个新功能 | 新功能、feature、新增 |
-| 进行了一次压缩 | 压缩、compact、总结 |
-| 调用了一个插件 | 插件、plugin、mcp、skill |
-| 想修改一个方案 | 修改方案、调整、change plan |
-| 清除了一次会话 | 清除、reset、new session |
-| 进行了一次规划 | 规划、方案、design、架构 |
-
-信号太弱或长聊类输入会随机抽取娱乐消息。同时有 5% 概率全局随机娱乐。
-
 ## 目录结构
 
 ```
@@ -73,11 +100,49 @@ pythonw woqu.py
 ├── start.bat        # 一键启动脚本
 ├── requirements.txt # Python 依赖
 ├── config.example.json  # 配置模板
-├── config.json      # 用户配置（不提交到 git）
-├── icon.ico         # 托盘图标
+├── icon.ico             # 托盘图标
 └── LICENSE
 ```
 
 ## 许可
 
 MIT
+
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！
+## 我去不早说！

@@ -31,6 +31,7 @@ CONFIG_FILE = Path(__file__).parent / "config.json"
 DEFAULT_CONFIG = {
     "user_name": "",
     "app_name": "我去不早说",
+    "fun_probability": 15,
 }
 config = dict(DEFAULT_CONFIG)
 
@@ -251,7 +252,70 @@ def classify_interaction(display):
         f_score += excl * 0.5
     scores['furious'] = f_score
 
-    # 12. 娱乐池（长聊/扯淡类）
+    # 12. 粘贴了一段文本
+    paste_score = 0.0
+    if '\n' in text:
+        paste_score += 3.0
+        if '\n    ' in text or '\n\t' in text:
+            paste_score += 2.0
+    if text_len > 200:
+        paste_score += 1.0
+    if text_len > 500:
+        paste_score += 2.0
+    if text_len > 1000:
+        paste_score += 3.0
+    if text_len > 2000:
+        paste_score += 4.0
+    code_indicators = ['def ', 'function ', 'class ', 'import ', 'from ', 'const ', 'let ', 'var ',
+                       '```', 'public ', 'private ', 'static ', 'void ', 'return ',
+                       'print(', 'console.log', 'System.out', '#include', 'package ',
+                       '{', '};', '=>', 'async ', 'await ', 'export ', '<html', '<div',
+                       'SELECT ', 'INSERT ', 'UPDATE ', 'DELETE ', 'CREATE TABLE']
+    code_count = sum(text_lower.count(c) for c in code_indicators)
+    paste_score += code_count * 0.8
+    scores['pasted_text'] = paste_score
+
+    # 13. 找不到问题在哪
+    nf_kw = ['找不到', '不知道哪里', '不知道问题', '没找到', "can't find", 'dont know',
+             '不知道怎么回事', '莫名其妙', '哪里有问题', '问题在哪', '不知道在哪',
+             '不知道什么原因', '找不到原因', '不知哪里', '看不出', '看不到问题',
+             '没发现问题', '不知道哪里错', '找不到错误', '不知问题', '不晓得哪里',
+             '不知道是哪', '找不着', '查不到', '定位不到']
+    scores['cant_find_issue'] = _pos_score(nf_kw, text, head, tail)
+
+    # 14. 想提交一个版本
+    cm_kw = ['commit', '提交', '保存版本', 'push', '上传', '推送',
+             'git add', '打个版本', '发布版本', '提交代码', '上传代码',
+             '提交一下', 'commit一下', '打个commit', 'stage', 'git stage',
+             'pr', 'pull request', 'merge', '合并', '打个包', '发版', 'release']
+    scores['want_commit'] = _pos_score(cm_kw, text, head, tail)
+
+    # 15. 想回退版本
+    rb_kw = ['回退', '回滚', 'revert', 'rollback', 'reset', '撤销', '退回',
+             '回到之前', '恢复版本', '退回去', 'checkout', 'undo', '撤销修改',
+             '回到上一个', '退回到', '还原', '恢复回去', '倒退', '恢复到',
+             '撤回去', '取消修改', '丢弃修改', '放弃修改', 'stash']
+    scores['want_rollback'] = _pos_score(rb_kw, text, head, tail)
+
+    # 16. 配置环境ing
+    env_kw = ['安装', 'install', 'pip install', 'npm install', '配置环境', '环境配置',
+              'setup', '部署', 'deploy', 'environment', '搭建环境', '装环境',
+              'requirements', 'poetry', 'conda', '虚拟环境', 'venv', '环境变量',
+              'path', '依赖', 'dependency', 'package', '下载', 'download',
+              'brew install', 'apt install', 'apt-get', 'choco install',
+              'yarn add', 'pnpm add', 'gem install', 'cargo install', 'go get',
+              '装一下', '配一下', '搭环境', '编译环境', '开发环境']
+    scores['configuring_env'] = _pos_score(env_kw, text, head, tail)
+
+    # 17. 做作业ing
+    hw_kw = ['作业', 'homework', '考试', '习题', '练习', '上课', '学习', '课程',
+             'assignment', 'exercise', '刷题', 'leetcode', '算法题', '编程题',
+             '题目', '做题', 'oj', 'acm', '竞赛', '比赛', '试题', '试卷',
+             '期末', '考试题', '课后', '编程作业', '大作业', '课设', '课程设计',
+             '数据结构', '算法导论', 'lab', '实验报告', '毕设', '毕业论文']
+    scores['doing_homework'] = _pos_score(hw_kw, text, head, tail)
+
+    # 18. 娱乐池（长聊/扯淡类）
     lc_kw = ['聊天', 'chat', '讨论', 'discuss', '聊聊', 'talk', '说说', '讲讲',
              '讲一下', '解释一下', '说明一下', '介绍一下', '科普', '讲讲看',
              '聊', '扯', '侃']
@@ -264,8 +328,8 @@ def classify_interaction(display):
         lc_score += 5.0
     scores['had_long_chat'] = lc_score
 
-    # 5% 概率全局随机娱乐消息
-    if random.random() < 0.05:
+    # 全局随机娱乐消息概率（从配置读取）
+    if random.random() < config.get('fun_probability', 15) / 100.0:
         return _random_fun()
 
     best = max(scores, key=scores.get)
@@ -287,6 +351,12 @@ def classify_interaction(display):
         'cleared_session': '清除了一次会话',
         'did_planning': '进行了一次规划',
         'furious': '彻底怒了',
+        'pasted_text': '粘贴了一段文本',
+        'cant_find_issue': '找不到问题在哪',
+        'want_commit': '想提交一个版本',
+        'want_rollback': '想回退版本',
+        'configuring_env': '配置环境ing',
+        'doing_homework': '做作业ing',
     }
 
     if best == 'had_long_chat':
@@ -301,6 +371,8 @@ def _random_fun():
         '进行一个天的聊',
         '抽claudeCode鞭子',
         '叽里咕噜的说什么呢',
+        '打怪兽ing',
+        '迈出了成为大佬的一步',
     ])
 
 
@@ -431,7 +503,7 @@ def show_settings():
         # 窗口居中
         win.update_idletasks()
         w = 380
-        h = 240
+        h = 310
         sw = win.winfo_screenwidth()
         sh = win.winfo_screenheight()
         win.geometry(f'{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}')
@@ -472,12 +544,30 @@ def show_settings():
         cb.pack(side='left')
         row2.pack(fill='x', pady=(14, 0))
 
+        # 娱乐概率行
+        row3 = tk.Frame(content, bg=BG)
+        tk.Label(row3, text='娱乐概率', font=('Microsoft YaHei UI', 12), fg=TEXT, bg=BG,
+                 width=10, anchor='w').pack(side='left')
+        prob_var = tk.IntVar(value=config.get('fun_probability', 15))
+        prob_label = tk.Label(row3, text=f'{prob_var.get()}%',
+                              font=('Microsoft YaHei UI', 11), fg=META, bg=BG, width=4)
+        def _on_prob_change(*args):
+            prob_label.config(text=f'{prob_var.get()}%')
+        prob_var.trace_add('write', _on_prob_change)
+        prob_scale = tk.Scale(row3, from_=0, to=100, orient=tk.HORIZONTAL,
+                              variable=prob_var, bg=BG, fg=TEXT,
+                              highlightthickness=0, bd=0, length=160)
+        prob_scale.pack(side='left', padx=(0, 8))
+        prob_label.pack(side='left')
+        row3.pack(fill='x', pady=(14, 0))
+
         # 底部按钮
         btn_frame = tk.Frame(win, bg=BG)
         btn_frame.pack(side='bottom', fill='x', padx=24, pady=(14, 22))
 
         def on_save():
             config['user_name'] = name_var.get().strip()
+            config['fun_probability'] = prob_var.get()
             save_config()
             toggle_startup(startup_var.get())
             win.destroy()
