@@ -26,13 +26,59 @@ except:
 
 HISTORY_FILE = Path.home() / ".claude" / "history.jsonl"
 ICON_FILE = Path(__file__).parent / "icon.ico"
+CONFIG_FILE = Path(__file__).parent / "config.json"
 
-APP_NAME = "我去不早说"
-USER_NAME = ""  # 留空则使用 Windows 用户名
+DEFAULT_CONFIG = {
+    "user_name": "",
+    "app_name": "我去不早说",
+}
+config = dict(DEFAULT_CONFIG)
 
 monitoring = True
 paused = False
 icon = None
+
+
+def load_config():
+    """从 config.json 加载配置，缺失则用默认值"""
+    global config
+    try:
+        if CONFIG_FILE.exists():
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                saved = json.load(f)
+            for key in DEFAULT_CONFIG:
+                if key in saved:
+                    config[key] = saved[key]
+    except:
+        pass
+
+
+def save_config():
+    """保存当前配置到 config.json"""
+    global config
+    try:
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+    except:
+        pass
+
+
+def is_startup_enabled():
+    startup_dir = Path(os.environ['APPDATA']) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+    return (startup_dir / "woqu.vbs").exists()
+
+
+def toggle_startup(enable):
+    startup_dir = Path(os.environ['APPDATA']) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+    vbs_path = startup_dir / "woqu.vbs"
+    if enable:
+        script_path = Path(__file__).resolve()
+        startup_dir.mkdir(parents=True, exist_ok=True)
+        with open(vbs_path, 'w', encoding='utf-8') as f:
+            f.write(f'CreateObject("WScript.Shell").Run "pythonw ""{script_path}""", 0, False\n')
+    else:
+        if vbs_path.exists():
+            vbs_path.unlink()
 
 
 def get_line_count(file_path):
@@ -369,6 +415,92 @@ def show_notification(user, project, action):
     threading.Thread(target=_run, daemon=True).start()
 
 
+def show_settings():
+    def _run():
+        global config
+
+        BG = '#ffffff'
+        ACCENT = '#b8753e'
+        TEXT = '#2c2c2c'
+        META = '#777777'
+
+        win = tk.Tk()
+        win.title(f"设置 - {config['app_name']}")
+        win.resizable(False, False)
+
+        # 窗口居中
+        win.update_idletasks()
+        w = 380
+        h = 240
+        sw = win.winfo_screenwidth()
+        sh = win.winfo_screenheight()
+        win.geometry(f'{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}')
+
+        win.configure(bg=BG)
+
+        # 标题栏
+        title_frame = tk.Frame(win, bg=BG)
+        title_frame.pack(fill='x', padx=24, pady=(22, 10))
+        tk.Label(title_frame, text=f"设置 - {config['app_name']}",
+                 font=('Microsoft YaHei UI', 14, 'bold'), fg=TEXT, bg=BG).pack(anchor='w')
+
+        # 分隔线
+        tk.Frame(win, height=1, bg='#e8e8e8').pack(fill='x', padx=24)
+
+        content = tk.Frame(win, bg=BG)
+        content.pack(fill='x', padx=28, pady=(14, 0))
+
+        # 用户名称行
+        row1 = tk.Frame(content, bg=BG)
+        tk.Label(row1, text='用户名称', font=('Microsoft YaHei UI', 12), fg=TEXT, bg=BG,
+                 width=10, anchor='w').pack(side='left')
+        name_var = tk.StringVar(value=config['user_name'])
+        name_entry = tk.Entry(row1, textvariable=name_var,
+                              font=('Microsoft YaHei UI', 12), fg=TEXT, bg='#f5f5f5',
+                              relief='flat', width=22)
+        name_entry.pack(side='left', ipady=4)
+        row1.pack(fill='x')
+
+        # 开机启动行
+        row2 = tk.Frame(content, bg=BG)
+        tk.Label(row2, text='开机启动', font=('Microsoft YaHei UI', 12), fg=TEXT, bg=BG,
+                 width=10, anchor='w').pack(side='left')
+        startup_var = tk.BooleanVar(value=is_startup_enabled())
+        cb = tk.Checkbutton(row2, variable=startup_var, bg=BG,
+                            activebackground=BG, selectcolor=BG,
+                            fg=META)
+        cb.pack(side='left')
+        row2.pack(fill='x', pady=(14, 0))
+
+        # 底部按钮
+        btn_frame = tk.Frame(win, bg=BG)
+        btn_frame.pack(side='bottom', fill='x', padx=24, pady=(14, 22))
+
+        def on_save():
+            config['user_name'] = name_var.get().strip()
+            save_config()
+            toggle_startup(startup_var.get())
+            win.destroy()
+
+        cancel_btn = tk.Button(btn_frame, text='取消',
+                               font=('Microsoft YaHei UI', 11), fg=META, bg='#f0f0f0',
+                               relief='flat', bd=0, padx=20, pady=6,
+                               activebackground='#e0e0e0', activeforeground=META,
+                               command=win.destroy)
+        cancel_btn.pack(side='right', padx=(8, 0))
+
+        save_btn = tk.Button(btn_frame, text='保存',
+                             font=('Microsoft YaHei UI', 11, 'bold'), fg='white', bg=ACCENT,
+                             relief='flat', bd=0, padx=24, pady=6,
+                             activebackground='#a3642e', activeforeground='white',
+                             command=on_save)
+        save_btn.pack(side='right')
+
+        win.mainloop()
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
 def monitor_loop():
     global monitoring, paused
 
@@ -396,7 +528,7 @@ def monitor_loop():
                     time.sleep(3)
 
                     if not paused:
-                        user = USER_NAME or os.environ.get("USERNAME", "用户")
+                        user = config.get('user_name') or os.environ.get("USERNAME", "用户")
                         action = classify_interaction(record['display'])
                         show_notification(user, project, action)
 
@@ -419,7 +551,7 @@ def update_icon():
     global icon
     if icon:
         icon.icon = load_icon()
-        icon.title = f"{APP_NAME} - {'已暂停' if paused else '监控中'}"
+        icon.title = f"{config['app_name']} - {'已暂停' if paused else '监控中'}"
 
 
 def load_icon():
@@ -443,6 +575,8 @@ def setup_icon():
             enabled=False
         ),
         pystray.Menu.SEPARATOR,
+        pystray.MenuItem("设置", lambda icon, item: show_settings()),
+        pystray.Menu.SEPARATOR,
         pystray.MenuItem(
             lambda item: "恢复" if paused else "暂停",
             on_pause
@@ -451,9 +585,9 @@ def setup_icon():
     )
 
     icon = pystray.Icon(
-        APP_NAME,
+        config['app_name'],
         load_icon(),
-        f"{APP_NAME} - 监控中",
+        f"{config['app_name']} - 监控中",
         menu
     )
 
@@ -461,6 +595,8 @@ def setup_icon():
 
 
 def main():
+    load_config()
+
     monitor_thread = threading.Thread(target=monitor_loop, daemon=True)
     monitor_thread.start()
 
