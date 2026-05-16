@@ -13,10 +13,7 @@
 ## 环境要求
 
 - Windows 系统
-- Python 3.10 及以上
-- 安装 Python 时需勾选 **tcl/tk and IDLE**（tkinter 为标准库，但需手动勾选安装）
-
-如果已安装 Python 但运行报错缺少 tkinter，重新运行 Python 安装器 → Modify → 勾选 `tcl/tk and IDLE`。
+- Python 3.10 及以上（tkinter 是标准库，默认安装即自带，无需额外操作）
 
 ## 快速开始
 
@@ -34,17 +31,9 @@ cd WhyNotEarlier
 
 如果还没装 Python，去 [python.org](https://www.python.org/downloads/) 下载 Python 3.10 及以上版本。
 
-**关键步骤**：安装时第一页勾选底部的 **Add Python to PATH**，然后点击 **Customize installation**，确保 **tcl/tk and IDLE** 处于勾选状态。否则 tkinter 不会安装，程序无法运行。
+安装时勾选底部的 **Add Python to PATH**，其余选项保持默认
 
-如果已经装过 Python 但缺 tkinter，重新运行安装器 → Modify → 勾选 `tcl/tk and IDLE`。
-
-验证 tkinter 是否可用：
-
-```bash
-python -c "import tkinter; print('ok')"
-```
-
-输出 `ok` 即正常。
+> 如果你手动取消了 `tcl/tk and IDLE` 导致缺少 tkinter，重新运行安装器 → Modify → 勾选该选项即可恢复。
 
 ### 3. 安装依赖
 
